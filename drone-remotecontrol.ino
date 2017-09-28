@@ -31,17 +31,19 @@ void loop() {
   if (radio.available()) {
     radio.read(resp, 32);
 
-    if (count(resp, ',') == 7) {
+    if (count(resp, ',') == 6) {
       //Serial.print("X: " + getValue(resp, ',', 0));
       //Serial.println(", Y: " + getValue(resp, ',', 1));
       //Serial.println("Altimeter: " + getValue(resp, ',', 3));
-      Serial.println("PID Roll: " + getValue(resp, ',', 6));
-    }/* else if (count(resp, ',') == 5) {
+      //Serial.println("Temperature: " + getValue(resp, ',', 4));
+    } else if (count(resp, ',') == 5) {
+      //Serial.println("PID Yaw: " + getValue(resp, ',', 1));
+      //Serial.println("PID Roll: " + getValue(resp, ',', 0));
       Serial.println("CW_FRONT: " + getValue(resp, ',', 0));
       Serial.println("CW_BACK: " + getValue(resp, ',', 1));
       Serial.println("CCW_LEFT: " + getValue(resp, ',', 2));
       Serial.println("CCW_RIGHT: " + getValue(resp, ',', 3));
-    }*/
+    }
     memset(resp, 0, 32);
   }
 
