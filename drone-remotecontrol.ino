@@ -6,8 +6,30 @@
 const uint64_t READ_PIPE = 0xF0F0F0F0ABLL;
 const uint64_t WRITE_PIPE = 0xF0F0F0F0AALL;
 
+typedef struct {
+  float x;
+  float y;
+  float z;
+} sensor_data_t;
+
+typedef struct {
+  sensor_data_t sensorData;
+  float altitude;
+  float temperature;
+  int motorThrusts[4];
+  float pidRoll;
+  float pidPitch;
+} debug_data_t;
+
+typedef enum {
+  CW_FRONT = 0,
+  CW_BACK = 1,
+  CCW_LEFT = 2,
+  CCW_RIGHT = 3
+} MOTOR_E;
+
 RF24 radio(9, 10);
-char *resp;
+debug_data_t resp;
 
 void setup() {
   Serial.begin(9600);
@@ -22,29 +44,18 @@ void setup() {
   radio.openWritingPipe(WRITE_PIPE);
   radio.startListening();
   Serial.println("Started listening...");
-  resp = new char[32];
-  memset(resp, 0, 32);
 }
 
 void loop() {
 
   if (radio.available()) {
-    radio.read(resp, 32);
+    radio.read(&resp, sizeof(debug_data_t));
 
-    if (count(resp, ',') == 6) {
-      //Serial.print("X: " + getValue(resp, ',', 0));
-      //Serial.println(", Y: " + getValue(resp, ',', 1));
-      //Serial.println("Altimeter: " + getValue(resp, ',', 3));
-      //Serial.println("Temperature: " + getValue(resp, ',', 4));
-    } else if (count(resp, ',') == 5) {
-      //Serial.println("PID Yaw: " + getValue(resp, ',', 1));
-      //Serial.println("PID Roll: " + getValue(resp, ',', 0));
-      Serial.println("CW_FRONT: " + getValue(resp, ',', 0));
-      Serial.println("CW_BACK: " + getValue(resp, ',', 1));
-      Serial.println("CCW_LEFT: " + getValue(resp, ',', 2));
-      Serial.println("CCW_RIGHT: " + getValue(resp, ',', 3));
-    }
-    memset(resp, 0, 32);
+    Serial.println("Inclination: " + String(resp.sensorData.x) + "," + String(resp.sensorData.y) + "," + String(resp.sensorData.z));
+    Serial.println("Altitude: " + String(resp.altitude));
+    Serial.println("Temperature: " + String(resp.temperature));
+    Serial.print("Motor Thrusts: "); // Clockwise order starting with CW_FRONT
+    Serial.println(String(resp.motorThrusts[CW_FRONT]) + "," + String(resp.motorThrusts[CCW_RIGHT]) + "," + String(resp.motorThrusts[CW_BACK]) + "," + String(resp.motorThrusts[CCW_LEFT]));
   }
 
   if (Serial.available()) {
@@ -59,34 +70,4 @@ void loop() {
   }
 
   delay(50);
-}
-
-String getValue(String data, char separator, int index) {
-  int found = 0;
-  int strIndex[] = {0, -1};
-  int maxIndex = data.length() - 1;
-
-  for (int i = 0; i <= maxIndex && found <= index; i++) {
-    if (data.charAt(i) == separator || i == maxIndex) {
-      found++;
-      strIndex[0] = strIndex[1] + 1;
-      strIndex[1] = (i == maxIndex) ? i + 1 : i;
-    }
-  }
-
-  return found > index ? data.substring(strIndex[0], strIndex[1]) : "";
-}
-
-
-int count(char* message, char delim) {
-  int len = strlen(message);
-  int c = 1;
-
-  for (int i = 0; i < len; i++) {
-    if (message[i] == delim) {
-      c++;
-    }
-  }
-
-  return c;
 }
