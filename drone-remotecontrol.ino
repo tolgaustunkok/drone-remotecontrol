@@ -1,5 +1,3 @@
-#include <SPI.h>
-#include <nRF24L01.h>
 #include <RF24.h>
 #include <RF24_config.h>
 
@@ -17,8 +15,7 @@ typedef struct {
   float altitude;
   float temperature;
   int motorThrusts[4];
-  float pidRoll;
-  float pidPitch;
+  float delta;
 } debug_data_t;
 
 typedef enum {
@@ -37,7 +34,7 @@ void setup() {
   Serial.println("Starting radio...");
   radio.begin();
   radio.setPALevel(RF24_PA_MAX);
-  //radio.setDataRate(RF24_250KBPS);
+  radio.setDataRate(RF24_250KBPS);
   radio.setRetries(15, 15);
   //radio.setAutoAck(0);
   radio.openReadingPipe(1, READ_PIPE);
@@ -51,6 +48,8 @@ void loop() {
   if (radio.available()) {
     radio.read(&resp, sizeof(debug_data_t));
 
+    Serial.println("-------------------------------------");
+    Serial.println("Delta: " + String(resp.delta));
     Serial.println("Inclination: " + String(resp.sensorData.x) + "," + String(resp.sensorData.y) + "," + String(resp.sensorData.z));
     Serial.println("Altitude: " + String(resp.altitude));
     Serial.println("Temperature: " + String(resp.temperature));
